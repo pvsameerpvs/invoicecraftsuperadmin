@@ -8,7 +8,8 @@ function parseSubdomain(host: string, rootDomain: string) {
   const cleanHost = host.split(":")[0];
 
   // Local dev: tenant.localhost or app.localhost
-  if (cleanHost === "localhost" || cleanHost.endsWith(".localhost")) {
+  if (cleanHost === "localhost") return null;
+  if (cleanHost.endsWith(".localhost")) {
     const h = cleanHost.replace(/\.localhost$/, "");
     const parts = h.split(".");
     if (parts.length >= 1 && parts[0]) return parts[0];
@@ -38,6 +39,11 @@ export async function middleware(req: NextRequest) {
 
   // Super Admin entrypoint: app.<root>
   if (subdomain === "app") {
+    // Allow API routes to pass through (do not prefix with /admin)
+    if (url.pathname.startsWith("/api")) {
+       return NextResponse.next();
+    }
+
     if (!url.pathname.startsWith("/admin")) {
       url.pathname = "/admin" + (url.pathname === "/" ? "" : url.pathname);
     }
