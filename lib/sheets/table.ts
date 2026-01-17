@@ -21,15 +21,68 @@ export async function readTable(sheetId: string, rangeA1: string): Promise<Row[]
   return rows;
 }
 
+export async function ensureTab(sheetId: string, tabName: string, headers: string[]) {
+  const sheets = getSheets();
+  try {
+    // Check if sheet exists
+    const meta = await sheets.spreadsheets.get({ spreadsheetId: sheetId });
+    const exists = meta.data.sheets?.some((s) => s.properties?.title === tabName);
+
+    if (!exists) {
+      // Create sheet
+      await sheets.spreadsheets.batchUpdate({
+        spreadsheetId: sheetId,
+        requestBody: {
+          requests: [{ addSheet: { properties: { title: tabName } } }],
+        },
+      });
+      console.log(`Created tab: ${tabName}`);
+      
+      // Add headers
+      if (headers.length > 0) {
+         await sheets.spreadsheets.values.append({
+            spreadsheetId: sheetId,
+            range: `${tabName}!A1`,
+            valueInputOption: "RAW",
+            requestBody: { values: [headers] },
+         });
+      }
+    }
+  } catch (e) {
+    console.error(`Failed to ensure tab ${tabName}`, e);
+  }
+}
+
 export async function appendRow(sheetId: string, rangeA1: string, headers: string[], row: Record<string, any>) {
   const sheets = getSheets();
-  const values = [headers.map((h) => (row[h] ?? "").toString())];
-  await sheets.spreadsheets.values.append({
-    spreadsheetId: sheetId,
-    range: rangeA1,
-    valueInputOption: "RAW",
-    requestBody: { values },
-  });
+  const tabName = rangeA1.split("!")[0]; // simplistic parse
+  
+  // Try append first (optimistic)
+  try {
+      const values = [headers.map((h) => (row[h] ?? "").toString())];
+      await sheets.spreadsheets.values.append({
+        spreadsheetId: sheetId,
+        range: rangeA1,
+        valueInputOption: "RAW",
+        requestBody: { values },
+      });
+  } catch (e: any) {
+      // If fails due to missing range/sheet, try to create it
+      if (e.message && e.message.includes("Unable to parse range")) {
+          console.log(`Tab missing for ${rangeA1}, attempting creation...`);
+          await ensureTab(sheetId, tabName, headers);
+          // Retry append
+          const values = [headers.map((h) => (row[h] ?? "").toString())];
+          await sheets.spreadsheets.values.append({
+            spreadsheetId: sheetId,
+            range: rangeA1,
+            valueInputOption: "RAW",
+            requestBody: { values },
+          });
+      } else {
+          throw e;
+      }
+  }
 }
 
 export async function updateCell(sheetId: string, rangeA1: string, value: string) {

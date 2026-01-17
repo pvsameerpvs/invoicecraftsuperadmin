@@ -23,8 +23,13 @@ const step1Schema = z.object({
 
 // Step 2: Admin User
 const step2Schema = z.object({
-  adminEmail: z.string().email("Invalid email address"),
+  adminName: z.string().min(2, "Name is required"),
+  username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Username must be alphanumeric"),
   adminPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Confirm Password is required"),
+}).refine((data) => data.adminPassword === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
 });
 
 // Step 3: Location & Plan
@@ -41,7 +46,19 @@ type Step2 = z.infer<typeof step2Schema>;
 type Step3 = z.infer<typeof step3Schema>;
 
 // Composite schema for final submission
-const fullSchema = step1Schema.merge(step2Schema).merge(step3Schema);
+// Note: ZodEffects (refine) cannot be merged directly. We reconstruct the object for merging.
+const step2Base = z.object({
+  adminName: z.string().min(2, "Name is required"),
+  username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Username must be alphanumeric"),
+  adminPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string().min(6, "Confirm Password is required"),
+});
+
+const fullSchema = step1Schema.merge(step2Base).merge(step3Schema).refine((data) => data.adminPassword === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
 type FormValues = z.infer<typeof fullSchema>;
 
 const STEPS = [
@@ -64,7 +81,7 @@ export default function RegisterTenantPage() {
   
   const form2 = useForm<Step2>({ 
     resolver: zodResolver(step2Schema), 
-    defaultValues: { adminEmail: "", adminPassword: "" } 
+    defaultValues: { adminName: "", username: "", adminPassword: "", confirmPassword: "" } 
   });
   
   const form3 = useForm<Step3>({ 
@@ -192,14 +209,24 @@ export default function RegisterTenantPage() {
           {step === 1 && (
             <form onSubmit={form2.handleSubmit(onStep2Submit)} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Admin Email</label>
-                <Input {...form2.register("adminEmail")} placeholder="admin@acme.com" className="h-11" />
-                {form2.formState.errors.adminEmail && <p className="text-red-500 text-xs">{form2.formState.errors.adminEmail.message}</p>}
+                <label className="text-sm font-medium">Admin Name</label>
+                <Input {...form2.register("adminName")} placeholder="John Doe" className="h-11" />
+                {form2.formState.errors.adminName && <p className="text-red-500 text-xs">{form2.formState.errors.adminName.message}</p>}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Admin Password</label>
+                <label className="text-sm font-medium">Username</label>
+                <Input {...form2.register("username")} placeholder="johndoe" className="h-11" />
+                {form2.formState.errors.username && <p className="text-red-500 text-xs">{form2.formState.errors.username.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Password</label>
                 <Input type="password" {...form2.register("adminPassword")} placeholder="******" className="h-11" />
                 {form2.formState.errors.adminPassword && <p className="text-red-500 text-xs">{form2.formState.errors.adminPassword.message}</p>}
+              </div>
+               <div className="space-y-2">
+                <label className="text-sm font-medium">Repeat Password</label>
+                <Input type="password" {...form2.register("confirmPassword")} placeholder="******" className="h-11" />
+                {form2.formState.errors.confirmPassword && <p className="text-red-500 text-xs">{form2.formState.errors.confirmPassword.message}</p>}
               </div>
 
               <div className="flex justify-between pt-4">

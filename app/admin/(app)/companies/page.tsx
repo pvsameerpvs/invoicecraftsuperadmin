@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { Eye } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +17,7 @@ type Company = {
 };
 
 export default function CompaniesPage() {
+  const router = useRouter();
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -93,26 +96,51 @@ export default function CompaniesPage() {
                 </thead>
                 <tbody>
                   {companies.map((c) => (
-                    <tr key={c.CompanyID} className="border-t">
-                      <td className="py-2">{c.CompanyName}</td>
+                    <tr 
+                      key={c.CompanyID} 
+                      className="border-t hover:bg-muted/50 cursor-pointer transition-colors"
+                      onClick={() => router.push(`/admin/companies/${c.Subdomain}`)}
+                    >
+                      <td className="py-2 font-medium">{c.CompanyName}</td>
                       <td className="py-2"><code>{c.Subdomain}</code></td>
-                      <td className="py-2">{c.Plan}</td>
-                      <td className="py-2">{c.Status}</td>
                       <td className="py-2">
+                        <span className={`text-xs px-2 py-1 rounded-full border ${
+                             c.Plan === 'Enterprise' ? 'bg-purple-50 text-purple-700 border-purple-200' :
+                             c.Plan === 'Pro' ? 'bg-blue-50 text-blue-700 border-blue-200' : 
+                             'bg-gray-50 text-gray-700 border-gray-200'
+                        }`}>
+                            {c.Plan}
+                        </span>
+                      </td>
+                      <td className="py-2">
+                         <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                            c.Status === 'Active' ? 'bg-green-100 text-green-700' :
+                            c.Status === 'Suspended' ? 'bg-red-100 text-red-700' :
+                            'bg-yellow-100 text-yellow-700'
+                        }`}>
+                            {c.Status}
+                        </span>
+                      </td>
+                      <td className="py-2" onClick={(e) => e.stopPropagation()}>
                         <div className="flex gap-2">
                           <Button
+                            size="sm"
+                            variant="ghost"
+                            className="bg-muted hover:bg-muted/80 text-muted-foreground"
+                            onClick={() => router.push(`/admin/companies/${c.Subdomain}`)}
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View
+                          </Button>
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => setStatus(c.CompanyID, "Active")}
                           >
                             Activate
                           </Button>
                           <Button
-                            variant="outline"
-                            onClick={() => setStatus(c.CompanyID, "Pending")}
-                          >
-                            Pending
-                          </Button>
-                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => setStatus(c.CompanyID, "Suspended")}
                           >

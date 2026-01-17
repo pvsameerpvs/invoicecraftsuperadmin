@@ -41,15 +41,7 @@ export default async function AdminAppLayout({
 
         {/* Header Actions */}
         <div className="flex items-center gap-4">
-            <div className="flex items-center gap-3 px-2">
-               <div className="text-right hidden sm:block">
-                 <p className="text-sm font-medium text-white">{session.sub}</p>
-                 <p className="text-xs text-white/50">Administrator</p>
-               </div>
-               <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-xs font-bold border-2 border-white/10">
-                 SA
-               </div>
-            </div>
+            {/* Empty or add other header items here like Notifications if needed */}
         </div>
       </header>
 
@@ -84,6 +76,17 @@ export default async function AdminAppLayout({
            </nav>
            
            <div className="p-4 border-t border-white/10">
+              <div className="flex items-center gap-3 mb-4 px-2">
+                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-primary to-orange-600 flex items-center justify-center text-xs font-bold border-2 border-white/10">
+                   SA
+                 </div>
+                 <div className="text-sm">
+                   <p className="font-medium text-white">Super Admin</p>
+                   {/* <p className="text-xs text-white/50 truncate max-w-[120px]">{session.sub}</p> */} 
+                   {/* Simplify to just role or name if 'sub' is too long/ugly, or keep it. */}
+                   <p className="text-xs text-white/50 truncate max-w-[140px]">{session.sub}</p>
+                 </div>
+              </div>
               <form action="/api/auth/logout" method="post">
                 <Button variant="destructive" className="w-full justify-start pl-3 text-white bg-red-600/20 hover:bg-red-600/40 border border-red-600/20" size="sm" type="submit">
                     <LogOut className="w-4 h-4 mr-2" />

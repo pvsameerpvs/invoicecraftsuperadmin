@@ -11,16 +11,47 @@ export type CompanyRecord = {
   AdminEmail: string;
   Plan: string;
   Status: CompanyStatus;
+  
+  // Extended Profile
+  TaxID?: string;
+  Phone?: string;
+  Address?: string;
+  City?: string;
+  Country?: string;
+  Currency?: string;
+
+  CreatedAt: string;
+};
+
+export type TenantUserRecord = {
+  UserID: string;
+  CompanyID: string;
+  Email: string;
+  Username: string;
+  FullName: string;
+  Role: "Owner" | "Admin" | "Member";
+  PasswordHash?: string; // Optional if using external auth, but keeping for now
   CreatedAt: string;
 };
 
 export class MasterRegistryService {
   static COMPANIES_TAB = "Companies";
-  static ADMINS_TAB = "AdminUsers";
+  static USERS_TAB = "TenantUsers"; // New Tab for Users
+  static ADMINS_TAB = "AdminUsers"; // Super Admins
 
   async listCompanies(): Promise<CompanyRecord[]> {
     const rows = await readTable(env.MASTER_SHEET_ID, `${MasterRegistryService.COMPANIES_TAB}!A1:Z`);
     return rows as any;
+  }
+
+  async listTenantUsers(): Promise<TenantUserRecord[]> {
+    const rows = await readTable(env.MASTER_SHEET_ID, `${MasterRegistryService.USERS_TAB}!A1:Z`);
+    return rows as any;
+  }
+
+  // Helper to expose readTable for ad-hoc queries if needed, using the imported function
+  async readTable(sheetId: string, range: string) {
+      return readTable(sheetId, range);
   }
 
   async getCompanyBySubdomain(subdomain: string): Promise<CompanyRecord | null> {
@@ -50,9 +81,29 @@ export class MasterRegistryService {
       "AdminEmail",
       "Plan",
       "Status",
+      "TaxID",
+      "Phone",
+      "Address",
+      "City",
+      "Country",
+      "Currency",
       "CreatedAt",
     ];
     await appendRow(env.MASTER_SHEET_ID, `${MasterRegistryService.COMPANIES_TAB}!A1`, headers, record as any);
+  }
+
+  async createTenantUser(record: TenantUserRecord) {
+     const headers = [
+      "UserID",
+      "CompanyID",
+      "Email",
+      "Username",
+      "FullName",
+      "Role",
+      "PasswordHash",
+      "CreatedAt"
+     ];
+     await appendRow(env.MASTER_SHEET_ID, `${MasterRegistryService.USERS_TAB}!A1`, headers, record as any);
   }
 
   async getSuperAdminByEmail(email: string): Promise<{ Email: string; PasswordHash: string } | null> {
