@@ -12,6 +12,7 @@
     "@hookform/resolvers": "^3.10.0",
     "bcryptjs": "^2.4.3",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "googleapis": "^140.0.0",
     "html2pdf.js": "^0.14.0",
     "jose": "^5.10.0",
