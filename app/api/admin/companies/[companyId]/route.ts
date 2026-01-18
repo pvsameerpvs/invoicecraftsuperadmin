@@ -24,7 +24,7 @@ export async function GET(req: Request, { params }: { params: { companyId: strin
   let adminName = "";
   try {
     const users = await master.readTable(process.env.MASTER_SHEET_ID!, "TenantUsers!A1:Z");
-    const adminUser = users.find((u: any) => u.CompanyID === company.CompanyID && u.Role === "Owner");
+    const adminUser = users.find((u: any) => u.CompanyID === company.CompanyID && u.Role === "admin");
     if (adminUser) adminName = adminUser.FullName;
   } catch (e) {
     console.error("Failed to fetch admin user", e);

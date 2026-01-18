@@ -64,7 +64,7 @@ export async function POST(req: Request) {
       Email: officialEmail || "", // Use official email for user record too, or leave blank
       Username: username,
       FullName: adminName,
-      Role: "Owner",
+      Role: "admin",
       PasswordHash: hashedPassword,
       CreatedAt: new Date().toISOString(),
     });

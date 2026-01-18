@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { MasterRegistryService } from "@/lib/sheets/master";
 
 function withinLastDays(iso: string, days: number) {
@@ -37,29 +38,69 @@ export default async function AdminDashboard() {
         </CardHeader>
         <CardContent>
           {recent.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No registrations in the last 30 days.</p>
+            <div className="flex h-32 items-center justify-center rounded-md border border-dashed text-sm text-muted-foreground">
+              No registrations in the last 30 days
+            </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-muted-foreground">
-                    <th className="py-2">Company</th>
-                    <th className="py-2">Subdomain</th>
-                    <th className="py-2">Plan</th>
-                    <th className="py-2">Status</th>
-                    <th className="py-2">Created</th>
+            <div className="relative w-full overflow-auto">
+              <table className="w-full caption-bottom text-sm">
+                <thead className="[&_tr]:border-b">
+                  <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Company</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Subdomain</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Plan</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Status</th>
+                    <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">Created</th>
                   </tr>
                 </thead>
-                <tbody>
-                  {recent.slice(0, 20).map((c) => (
-                    <tr key={c.CompanyID} className="border-t">
-                      <td className="py-2">{c.CompanyName}</td>
-                      <td className="py-2"><code>{c.Subdomain}</code></td>
-                      <td className="py-2">{c.Plan}</td>
-                      <td className="py-2">{c.Status}</td>
-                      <td className="py-2">{new Date(c.CreatedAt).toLocaleString()}</td>
-                    </tr>
-                  ))}
+                <tbody className="[&_tr:last-child]:border-0">
+                  {recent.slice(0, 20).map((c) => {
+                     // Determine status badge variant
+                     let statusVariant: "default" | "secondary" | "destructive" | "outline" | "success" | "warning" = "secondary";
+                     if (c.Status === "Active") statusVariant = "success";
+                     else if (c.Status === "Suspended") statusVariant = "destructive";
+                     else if (c.Status === "Pending") statusVariant = "warning";
+
+                     // Initials for avatar
+                     const initials = c.CompanyName
+                       ? c.CompanyName.slice(0, 2).toUpperCase()
+                       : "CO";
+
+                     return (
+                      <tr key={c.CompanyID} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
+                        <td className="p-4 align-middle font-medium">
+                           <div className="flex items-center gap-2">
+                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
+                               {initials}
+                             </div>
+                             {c.CompanyName}
+                           </div>
+                        </td>
+                        <td className="p-4 align-middle">
+                           <code className="relative rounded bg-muted px-[0.3rem] py-[0.2rem] font-mono text-sm font-semibold">
+                             {c.Subdomain}
+                           </code>
+                        </td>
+                        <td className="p-4 align-middle">
+                          <Badge variant="outline" className="capitalize">
+                            {c.Plan}
+                          </Badge>
+                        </td>
+                        <td className="p-4 align-middle">
+                          <Badge variant={statusVariant}>
+                            {c.Status}
+                          </Badge>
+                        </td>
+                        <td className="p-4 align-middle text-muted-foreground">
+                          {new Date(c.CreatedAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric"
+                          })}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

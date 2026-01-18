@@ -29,7 +29,7 @@ export type TenantUserRecord = {
   Email: string;
   Username: string;
   FullName: string;
-  Role: "Owner" | "Admin" | "Member";
+  Role: "admin" | "user";
   PasswordHash?: string; // Optional if using external auth, but keeping for now
   CreatedAt: string;
 };
