@@ -172,11 +172,48 @@ export default function CompanyDetailsPage({ params }: { params: { companyId: st
                  </div>
                  <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Status</span>
-                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                        company.Status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'
-                    }`}>
-                        {company.Status}
-                    </span>
+                    <div className="relative">
+                        <select
+                            disabled={loading}
+                            value={company.Status}
+                            onChange={async (e) => {
+                                const newStatus = e.target.value as any;
+                                const originalStatus = company.Status;
+                                
+                                // Optimistic update
+                                setCompany({ ...company, Status: newStatus });
+                                
+                                try {
+                                    const res = await fetch(`/api/admin/companies/${params.companyId}`, {
+                                        method: "PATCH",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ status: newStatus }),
+                                    });
+                                    
+                                    if (!res.ok) throw new Error("Failed to update status");
+                                    
+                                    toast.success(`Status updated to ${newStatus}`);
+                                    router.refresh(); // Refresh server data
+                                } catch (error) {
+                                    // Revert
+                                    setCompany({ ...company, Status: originalStatus });
+                                    toast.error("Failed to update status");
+                                }
+                            }}
+                            className={`h-8 w-32 appearance-none rounded-full border px-3 py-1 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                                company.Status === 'Active' ? 'bg-green-100 text-green-700 border-green-200' :
+                                company.Status === 'Suspended' ? 'bg-red-100 text-red-700 border-red-200' :
+                                'bg-yellow-100 text-yellow-700 border-yellow-200'
+                            }`}
+                        >
+                            <option value="Active">Active</option>
+                            <option value="Pending">Pending</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                          <svg className="h-4 w-4 fill-current opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                        </div>
+                    </div>
                  </div>
                  
                  <div className="pt-4 mt-2 border-t space-y-2">
