@@ -92,6 +92,7 @@ export async function POST(req: Request) {
       FullName: adminName,
       Role: "admin" as const,
       PasswordHash: hashedPassword,
+      Mobile: phone || "",
       CreatedAt: new Date().toISOString(),
     };
 
@@ -103,7 +104,8 @@ export async function POST(req: Request) {
     // This ensures the tenant sheet is self-contained
     try {
         console.log("Syncing data to Tenant Sheet:", finalSheetId);
-        await master.addCompanyToTenantSettings(finalSheetId, companyRecord);
+        // User requested NOT to sync company settings to the Settings tab
+        // await master.addCompanyToTenantSettings(finalSheetId, companyRecord);
         await master.addUserToTenantSheet(finalSheetId, userRecord);
     } catch (syncError) {
         // Log but don't fail the entire request, as the tenant is technically registered

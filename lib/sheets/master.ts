@@ -32,8 +32,13 @@ export type TenantUserRecord = {
   FullName: string;
   Role: "admin" | "user";
   PasswordHash?: string; // Optional if using external auth, but keeping for now
+  Mobile?: string;
   CreatedAt: string;
 };
+
+// ... existing code ...
+
+
 
 export class MasterRegistryService {
   static COMPANIES_TAB = "Companies";
@@ -178,7 +183,7 @@ export class MasterRegistryService {
       Password: user.PasswordHash, // Mapping PasswordHash to Password
       Role: user.Role,
       Email: user.Email,
-      Mobile: "", // No mobile in TenantUserRecord yet, default to empty
+      Mobile: user.Mobile || "",
       createdAt: user.CreatedAt
     };
     await appendRow(sheetId, "Users!A1", headers, row as any);
