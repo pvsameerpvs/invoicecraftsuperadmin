@@ -33,14 +33,43 @@ export async function POST(req: Request) {
 
     const companyId = uuidv4();
     const userId = uuidv4();
-    await master.validateTenantSheet(sheetId);
+
+    // Determine Sheet ID: Use provided one or create new
+    let finalSheetId = sheetId;
+    if (!finalSheetId) {
+      try {
+         finalSheetId = await master.createTenantDB(subdomain);
+      } catch (e: any) {
+         console.error("Failed to create tenant DB", e);
+         return NextResponse.json({ error: "Failed to create Google Sheet: " + e.message }, { status: 500 });
+      }
+    } else {
+      // If manually provided, check if it's already in use
+      const existingSheetUser = await master.getCompanyBySheetId(finalSheetId);
+      if (existingSheetUser) {
+        return NextResponse.json({ error: "This Sheet ID is already in use by another company." }, { status: 400 });
+      }
+    }
+
+    // Validate and Initialize Schema (Create Tabs)
+    try {
+      await master.validateTenantSheet(finalSheetId);
+    } catch (e: any) {
+      console.error("Sheet Validation Failed:", e);
+      if (e.message?.includes("403") || e.message?.includes("permission")) {
+        return NextResponse.json({ 
+          error: "Permission Denied: The system cannot access the provided Google Sheet. Please share the sheet with the Service Account email." 
+        }, { status: 400 });
+      }
+      return NextResponse.json({ error: "Invalid Sheet ID or Schema Initialization Failed: " + e.message }, { status: 400 });
+    }
 
     // 1. Create Company Record
     await master.createCompany({
       CompanyID: companyId,
       CompanyName: companyName,
       Subdomain: subdomain,
-      SheetID: sheetId,
+      SheetID: finalSheetId,
       // Use official email as the main admin contact since we don't have a separate admin email anymore
       AdminEmail: officialEmail || "", 
       Plan: plan || "Pro",
@@ -74,7 +103,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       ok: true, 
       companyId, 
-      sheetId,
+      sheetId: finalSheetId,
       message: "Tenant registered successfully" 
     });
 

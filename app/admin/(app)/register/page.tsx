@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useForm } from "react-hook-form"; // Removed FieldValues
+import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -39,6 +39,7 @@ const step3Schema = z.object({
   country: z.string().min(2, "Country is required"),
   currency: z.string().min(2, "Currency is required"),
   plan: z.enum(["Free", "Pro", "Enterprise"]),
+  sheetId: z.string().min(10, "Valid Sheet ID is required"),
 });
 
 type Step1 = z.infer<typeof step1Schema>;
@@ -46,7 +47,6 @@ type Step2 = z.infer<typeof step2Schema>;
 type Step3 = z.infer<typeof step3Schema>;
 
 // Composite schema for final submission
-// Note: ZodEffects (refine) cannot be merged directly. We reconstruct the object for merging.
 const step2Base = z.object({
   adminName: z.string().min(2, "Name is required"),
   username: z.string().min(3, "Username must be at least 3 characters").regex(/^[a-zA-Z0-9_]+$/, "Username must be alphanumeric"),
@@ -73,7 +73,6 @@ export default function RegisterTenantPage() {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<FormValues>>({});
 
-  // Separate forms per step
   const form1 = useForm<Step1>({ 
     resolver: zodResolver(step1Schema), 
     defaultValues: { companyName: "", subdomain: "", taxId: "", officialEmail: "", phone: "" } 
@@ -86,7 +85,7 @@ export default function RegisterTenantPage() {
   
   const form3 = useForm<Step3>({ 
     resolver: zodResolver(step3Schema), 
-    defaultValues: { address: "", city: "", country: "", currency: "AED", plan: "Pro" } 
+    defaultValues: { address: "", city: "", country: "", currency: "AED", plan: "Pro", sheetId: "" } 
   });
 
   const onStep1Submit = (data: Step1) => { 
@@ -266,6 +265,12 @@ export default function RegisterTenantPage() {
                      </select>
                    </Field>
               </div>
+
+               <Field label="Google Sheet ID">
+                 <Input {...form3.register("sheetId")} placeholder="Paste your manually created Sheet ID here" />
+                 <p className="text-[10px] text-muted-foreground">Optional. If provided, the system will initialize the database schema inside your sheet. Leave blank to auto-create.</p>
+                 {form3.formState.errors.sheetId && <p className="text-red-500 text-xs">{form3.formState.errors.sheetId.message}</p>}
+               </Field>
 
               <div className="mt-6 flex items-center justify-between">
                 <Button variant="outline" type="button" onClick={() => setStep(1)} disabled={loading}>

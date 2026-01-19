@@ -67,6 +67,12 @@ export class MasterRegistryService {
     return found || null;
   }
 
+  async getCompanyBySheetId(sheetId: string): Promise<CompanyRecord | null> {
+    const companies = await this.listCompanies();
+    const found = companies.find((c) => c.SheetID === sheetId);
+    return found || null;
+  }
+
   async setCompanyStatus(companyId: string, status: CompanyStatus) {
     await upsertByKey(env.MASTER_SHEET_ID, MasterRegistryService.COMPANIES_TAB, "CompanyID", companyId, {
       Status: status,
@@ -109,7 +115,7 @@ export class MasterRegistryService {
 
   async validateTenantSheet(sheetId: string) {
     if (sheetId === env.USER_TEMPLATE_SHEET_ID) {
-      throw new Error("Cannot assign Template Sheet as Tenant Sheet");
+       console.warn("Warning: Using Master Template as Tenant Sheet. This is generally not recommended.");
     }
 
     // Define schema
