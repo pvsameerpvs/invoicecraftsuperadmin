@@ -144,6 +144,10 @@ export class MasterRegistryService {
       {
         name: "Users",
         headers: ["ID", "Username", "Password", "Role", "Email", "Mobile", "createdAt"]
+      },
+      {
+        name: "CompanyProfile",
+        headers: ["CompanyID", "Subdomain", "SheetID","Username", "CreatedAt"]
       }
     ];
 
@@ -173,6 +177,18 @@ export class MasterRegistryService {
         UpdatedAt: new Date().toISOString()
       });
     }
+  }
+
+  async addCompanyProfileToTenantSheet(sheetId: string, company: CompanyRecord, username: string) {
+    const headers = ["CompanyID", "Subdomain", "SheetID", "Username", "CreatedAt"];
+    const row = {
+      CompanyID: company.CompanyID,
+      Subdomain: company.Subdomain,
+      SheetID: company.SheetID,
+      Username: username,
+      CreatedAt: company.CreatedAt
+    };
+    await appendRow(sheetId, "CompanyProfile!A1", headers, row as any);
   }
 
   async addUserToTenantSheet(sheetId: string, user: TenantUserRecord) {

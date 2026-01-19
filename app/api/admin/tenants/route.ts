@@ -104,8 +104,13 @@ export async function POST(req: Request) {
     // This ensures the tenant sheet is self-contained
     try {
         console.log("Syncing data to Tenant Sheet:", finalSheetId);
+        
+        // Sync Company Profile (ID, Subdomain, SheetID, Username)
+        await master.addCompanyProfileToTenantSheet(finalSheetId, companyRecord, username);
+        
         // User requested NOT to sync company settings to the Settings tab
         // await master.addCompanyToTenantSettings(finalSheetId, companyRecord);
+        
         await master.addUserToTenantSheet(finalSheetId, userRecord);
     } catch (syncError) {
         // Log but don't fail the entire request, as the tenant is technically registered
