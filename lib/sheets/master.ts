@@ -1,5 +1,6 @@
 import { env } from "@/lib/env";
-import { readTable, appendRow, upsertByKey } from "@/lib/sheets/table";
+import { readTable, appendRow, upsertByKey, ensureTab } from "@/lib/sheets/table";
+import { duplicateFile } from "./drive";
 
 export type CompanyStatus = "Active" | "Pending" | "Suspended";
 
@@ -104,6 +105,43 @@ export class MasterRegistryService {
       "CreatedAt"
      ];
      await appendRow(env.MASTER_SHEET_ID, `${MasterRegistryService.USERS_TAB}!A1`, headers, record as any);
+  }
+
+  async validateTenantSheet(sheetId: string) {
+    if (sheetId === env.USER_TEMPLATE_SHEET_ID) {
+      throw new Error("Cannot assign Template Sheet as Tenant Sheet");
+    }
+
+    // Define schema
+    const tabs = [
+      { 
+        name: "Invoices", 
+        headers: ["InvoiceID", "ClientID", "Date", "DueDate", "Items", "Subtotal", "Tax", "Total", "Status", "CreatedAt"] 
+      },
+      { 
+        name: "Clients", 
+        headers: ["ClientID", "Name", "Email", "Phone", "Address", "City", "Country", "CreatedAt"] 
+      },
+      { 
+        name: "Products", 
+        headers: ["ProductID", "Name", "Description", "Price", "Currency", "CreatedAt"] 
+      },
+      { 
+        name: "Settings", 
+        headers: ["Key", "Value", "Description", "UpdatedAt"] 
+      },
+    ];
+
+    // Ensure all tabs exist
+    for (const tab of tabs) {
+      await ensureTab(sheetId, tab.name, tab.headers);
+    }
+  }
+
+  async createTenantDB(subdomain: string) {
+    const newSheetId = await duplicateFile(env.USER_TEMPLATE_SHEET_ID, env.USER_SHEET_FOLDER_ID, subdomain);
+    console.info("New sheet created with ID:", newSheetId);
+    return newSheetId;
   }
 
   async getSuperAdminByEmail(email: string): Promise<{ Email: string; PasswordHash: string } | null> {

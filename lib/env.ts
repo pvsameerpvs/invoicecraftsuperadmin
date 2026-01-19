@@ -6,6 +6,8 @@ const envSchema = z.object({
   MASTER_SHEET_ID: z.string().min(1),
   COOKIE_SECRET: z.string().min(32),
   ROOT_DOMAIN: z.string().min(1).default("invoicecraft.com"),
+  USER_TEMPLATE_SHEET_ID: z.string().min(1),
+  USER_SHEET_FOLDER_ID: z.string().min(1),
 });
 
 export const env = envSchema.parse({
@@ -14,4 +16,6 @@ export const env = envSchema.parse({
   MASTER_SHEET_ID: process.env.MASTER_SHEET_ID,
   COOKIE_SECRET: process.env.COOKIE_SECRET,
   ROOT_DOMAIN: process.env.ROOT_DOMAIN,
+  USER_TEMPLATE_SHEET_ID: process.env.USER_TEMPLATE_SHEET_ID,
+  USER_SHEET_FOLDER_ID: process.env.USER_SHEET_FOLDER_ID,
 });

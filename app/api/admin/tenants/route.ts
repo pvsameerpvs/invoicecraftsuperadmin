@@ -15,7 +15,7 @@ export async function POST(req: Request) {
     const { 
       companyName, subdomain, officialEmail, taxId, phone, // Step 1
       adminName, username, adminPassword, // Step 2 (adminEmail removed)
-      address, city, country, currency, plan // Step 3
+      address, city, country, currency, plan, sheetId, // Step 3
     } = body;
 
     // Basic Validation
@@ -33,7 +33,7 @@ export async function POST(req: Request) {
 
     const companyId = uuidv4();
     const userId = uuidv4();
-    const sheetId = `mock-sheet-${subdomain}`; // In a real app, we would create a real sheet here
+    await master.validateTenantSheet(sheetId);
 
     // 1. Create Company Record
     await master.createCompany({
@@ -53,6 +53,8 @@ export async function POST(req: Request) {
       Currency: currency || "AED",
       CreatedAt: new Date().toISOString(),
     });
+
+    
 
     // 2. Create Admin User Record
     // Hash password
