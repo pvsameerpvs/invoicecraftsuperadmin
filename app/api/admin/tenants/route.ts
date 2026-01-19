@@ -64,8 +64,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Invalid Sheet ID or Schema Initialization Failed: " + e.message }, { status: 400 });
     }
 
-    // 1. Create Company Record
-    await master.createCompany({
+    // 1. Prepare Records
+    const companyRecord = {
       CompanyID: companyId,
       CompanyName: companyName,
       Subdomain: subdomain,
@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       // Use official email as the main admin contact since we don't have a separate admin email anymore
       AdminEmail: officialEmail || "", 
       Plan: plan || "Pro",
-      Status: "Active",
+      Status: "Active" as const, // Cast to literal type if needed
       TaxID: taxId || "",
       Phone: phone || "",
       Address: address || "",
@@ -81,24 +81,34 @@ export async function POST(req: Request) {
       Country: country || "",
       Currency: currency || "AED",
       CreatedAt: new Date().toISOString(),
-    });
+    };
 
-    
-
-    // 2. Create Admin User Record
-    // Hash password
     const hashedPassword = await hash(adminPassword, 10);
-    
-    await master.createTenantUser({
+    const userRecord = {
       UserID: userId,
       CompanyID: companyId,
       Email: officialEmail || "", // Use official email for user record too, or leave blank
       Username: username,
       FullName: adminName,
-      Role: "admin",
+      Role: "admin" as const,
       PasswordHash: hashedPassword,
       CreatedAt: new Date().toISOString(),
-    });
+    };
+
+    // 2. Save to Master Registry
+    await master.createCompany(companyRecord);
+    await master.createTenantUser(userRecord);
+
+    // 3. Sync Initial Data to Tenant Sheet
+    // This ensures the tenant sheet is self-contained
+    try {
+        console.log("Syncing data to Tenant Sheet:", finalSheetId);
+        await master.addCompanyToTenantSettings(finalSheetId, companyRecord);
+        await master.addUserToTenantSheet(finalSheetId, userRecord);
+    } catch (syncError) {
+        // Log but don't fail the entire request, as the tenant is technically registered
+        console.error("Warning: Failed to sync initial data to Tenant Sheet:", syncError);
+    }
 
     return NextResponse.json({ 
       ok: true, 

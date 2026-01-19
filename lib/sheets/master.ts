@@ -136,6 +136,10 @@ export class MasterRegistryService {
         name: "Settings", 
         headers: ["Key", "Value", "Description", "UpdatedAt"] 
       },
+      {
+        name: "Users",
+        headers: ["ID", "Username", "Password", "Role", "Email", "Mobile", "createdAt"]
+      }
     ];
 
     // Ensure all tabs exist
@@ -148,6 +152,36 @@ export class MasterRegistryService {
     const newSheetId = await duplicateFile(env.USER_TEMPLATE_SHEET_ID, env.USER_SHEET_FOLDER_ID, subdomain);
     console.info("New sheet created with ID:", newSheetId);
     return newSheetId;
+  }
+
+  async addCompanyToTenantSettings(sheetId: string, company: CompanyRecord) {
+    const settings = [
+      { Key: "CompanyName", Value: company.CompanyName, Description: "Company Name" },
+      { Key: "Subdomain", Value: company.Subdomain, Description: "Subdomain" },
+      { Key: "Plan", Value: company.Plan, Description: "Subscription Plan" },
+      { Key: "Currency", Value: company.Currency || "AED", Description: "Default Currency" },
+    ];
+
+    for (const s of settings) {
+      await appendRow(sheetId, "Settings!A1", ["Key", "Value", "Description", "UpdatedAt"], {
+        ...s,
+        UpdatedAt: new Date().toISOString()
+      });
+    }
+  }
+
+  async addUserToTenantSheet(sheetId: string, user: TenantUserRecord) {
+    const headers = ["ID", "Username", "Password", "Role", "Email", "Mobile", "createdAt"];
+    const row = {
+      ID: user.UserID,
+      Username: user.Username,
+      Password: user.PasswordHash, // Mapping PasswordHash to Password
+      Role: user.Role,
+      Email: user.Email,
+      Mobile: "", // No mobile in TenantUserRecord yet, default to empty
+      createdAt: user.CreatedAt
+    };
+    await appendRow(sheetId, "Users!A1", headers, row as any);
   }
 
   async getSuperAdminByEmail(email: string): Promise<{ Email: string; PasswordHash: string } | null> {
