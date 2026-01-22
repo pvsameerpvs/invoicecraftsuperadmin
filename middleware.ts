@@ -46,7 +46,8 @@ export async function middleware(req: NextRequest) {
 
     // Redirect root to login page
     if (url.pathname === "/") {
-      return NextResponse.redirect(new URL("/admin/login", req.url));
+      const loginUrl = new URL("/admin/login", req.nextUrl.origin);
+      return NextResponse.redirect(loginUrl);
     }
 
     if (!url.pathname.startsWith("/admin")) {
