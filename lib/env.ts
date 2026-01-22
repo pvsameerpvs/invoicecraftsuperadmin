@@ -5,7 +5,7 @@ const envSchema = z.object({
   GOOGLE_PRIVATE_KEY: z.string().min(1),
   MASTER_SHEET_ID: z.string().min(1),
   COOKIE_SECRET: z.string().min(32),
-  ROOT_DOMAIN: z.string().min(1).default("invoicecraft.com"),
+  ROOT_DOMAIN: z.string().min(1).default("invoicecraftjs.com"),
   USER_TEMPLATE_SHEET_ID: z.string().min(1),
   USER_SHEET_FOLDER_ID: z.string().min(1),
 });
