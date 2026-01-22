@@ -8,12 +8,10 @@ const nextConfig = {
     },
   },
   experimental: {
-    // Allow app.localhost, *.localhost
-    allowedDevOrigins: [
-        "localhost:3000",
-        "app.localhost:3000",
-        "invoicecraft.com"
-    ],
+    // If you need Server Actions allowed origins, use:
+    // serverActions: {
+    //   allowedOrigins: ["localhost:3000", "app.localhost:3000", "invoicecraft.com"]
+    // }
   },
 };
 
