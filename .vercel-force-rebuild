@@ -1,0 +1,6 @@
+# Force rebuild timestamp
+# This file is used to force Vercel to rebuild without cache
+# Last rebuild: 2026-01-22T15:25:22+04:00
+
+Build ID: 442c035
+Reason: Fixed EROFS filesystem write errors
