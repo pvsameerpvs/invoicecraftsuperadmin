@@ -11,13 +11,13 @@ export function getGoogleAuth() {
   // Try to load from local JSON file first (more robust in dev)
   try {
     const p = process.cwd() + "/invoicecraft-db-8ffab0842984.json";
-    fs.appendFileSync('auth_debug.log', `Trying to load from: ${p}\n`);
+    console.log('[AUTH] Trying to load from:', p);
     
     if (fs.existsSync(p)) {
         const fileContent = fs.readFileSync(p, 'utf-8');
         const creds = JSON.parse(fileContent);
-        fs.appendFileSync('auth_debug.log', `Loaded JSON. Email: ${creds.client_email}\n`);
-        fs.appendFileSync('auth_debug.log', `Key length: ${creds.private_key ? creds.private_key.length : 'undefined'}\n`);
+        console.log('[AUTH] Loaded JSON. Email:', creds.client_email);
+        console.log('[AUTH] Key length:', creds.private_key ? creds.private_key.length : 'undefined');
         
         return new google.auth.JWT({
           email: creds.client_email,
@@ -28,16 +28,19 @@ export function getGoogleAuth() {
           ],
         });
     } else {
-        fs.appendFileSync('auth_debug.log', `File not found at ${p}\n`);
+        console.log('[AUTH] File not found at', p);
     }
 
   } catch (e: any) {
-    fs.appendFileSync('auth_debug.log', `Error loading JSON: ${e.message}\n`);
+    console.log('[AUTH] Error loading JSON:', e.message);
     console.warn("Could not load local JSON credentials, falling back to ENV variables.");
   }
 
   // Fallback
-  fs.appendFileSync('auth_debug.log', `Falling back to ENV. Email: ${env.GOOGLE_SERVICE_ACCOUNT_EMAIL}\n`);
+  console.log('[AUTH] Falling back to ENV. Email:', env.GOOGLE_SERVICE_ACCOUNT_EMAIL);
+  console.log('[AUTH] Private key available:', !!env.GOOGLE_PRIVATE_KEY);
+  console.log('[AUTH] Private key length:', env.GOOGLE_PRIVATE_KEY?.length);
+  
   return new google.auth.JWT({
     email: env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
     key: getPrivateKey(),

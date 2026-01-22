@@ -18,8 +18,8 @@ export async function GET() {
     Contains Literal \\n: ${key.includes("\\n")}
     First 10 chars: ${key.split('').map(c => c.charCodeAt(0)).slice(0, 10).join(',')}
     `;
-    const fs = require('fs');
-    fs.writeFileSync('debug_key.txt', debugInfo);
+    console.log('[TEST-DB] Debug Info:', debugInfo);
+
 
 
     // Try to get spreadsheet metadata to verify access
