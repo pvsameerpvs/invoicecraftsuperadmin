@@ -2,8 +2,49 @@ import { google } from "googleapis";
 import { env } from "@/lib/env";
 
 function getPrivateKey() {
-  // Vercel stores multiline keys with literal \n
-  return env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
+  let key = env.GOOGLE_PRIVATE_KEY;
+  
+  // Handle different newline formats
+  // Vercel might store as literal \n or actual newlines
+  if (key.includes('\\n')) {
+    // Replace literal \n with actual newlines
+    key = key.replace(/\\n/g, '\n');
+  }
+  
+  // Ensure key has proper format
+  if (!key.includes('\n') && key.length > 100) {
+    // Key might be base64 encoded or missing newlines
+    console.warn('[AUTH] Private key appears to be in wrong format, attempting to fix...');
+    
+    // Try to add newlines in standard PEM format
+    if (key.startsWith('-----BEGIN PRIVATE KEY-----')) {
+      const lines = [];
+      const header = '-----BEGIN PRIVATE KEY-----';
+      const footer = '-----END PRIVATE KEY-----';
+      
+      let content = key.replace(header, '').replace(footer, '').replace(/\s/g, '');
+      
+      lines.push(header);
+      // Split content into 64-character lines (standard PEM format)
+      for (let i = 0; i < content.length; i += 64) {
+        lines.push(content.substring(i, i + 64));
+      }
+      lines.push(footer);
+      
+      key = lines.join('\n');
+    }
+  }
+  
+  console.log('[AUTH] Private key format check:', {
+    hasBeginMarker: key.includes('-----BEGIN PRIVATE KEY-----'),
+    hasEndMarker: key.includes('-----END PRIVATE KEY-----'),
+    hasNewlines: key.includes('\n'),
+    length: key.length,
+    firstLine: key.split('\n')[0],
+    lineCount: key.split('\n').length
+  });
+  
+  return key;
 }
 
 export function getGoogleAuth() {
