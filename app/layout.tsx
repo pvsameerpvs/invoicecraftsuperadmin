@@ -12,7 +12,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning>
       <body>
         {children}
-        <Toaster />
+        <Toaster 
+          position="top-right" 
+          richColors 
+          closeButton 
+          duration={4000}
+          toastOptions={{
+            style: {
+              padding: '16px',
+            },
+          }}
+        />
       </body>
     </html>
   )

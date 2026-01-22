@@ -6,29 +6,69 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import { toast } from "sonner";
+import { useState } from "react";
+import { Loader2 } from "lucide-react";
 
 const schema = z.object({
-  email: z.string().email(),
-  password: z.string().min(1),
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type FormValues = z.infer<typeof schema>;
 
 export default function AdminLoginPage() {
+  const [isLoading, setIsLoading] = useState(false);
   const form = useForm<FormValues>({ resolver: zodResolver(schema) });
 
   async function onSubmit(values: FormValues) {
-    const res = await fetch("/api/auth/superadmin/login", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(values),
-    });
-    if (res.ok) {
-      window.location.href = "/admin/dashboard";
-      return;
+    // Prevent multiple submissions
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const res = await fetch("/api/auth/superadmin/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (res.ok) {
+        toast.success("Login successful!", {
+          description: "Redirecting to dashboard...",
+        });
+        
+        // Small delay to show the success message
+        setTimeout(() => {
+          window.location.href = "/admin/dashboard";
+        }, 500);
+        return;
+      }
+      
+      // Handle different error cases
+      if (res.status === 401) {
+        toast.error("Invalid credentials", {
+          description: "Please check your email and password and try again.",
+        });
+      } else if (res.status === 500) {
+        toast.error("Server error", {
+          description: data.error || "Something went wrong. Please try again later.",
+        });
+      } else {
+        toast.error("Login failed", {
+          description: data.error || "An unexpected error occurred.",
+        });
+      }
+    } catch (error) {
+      toast.error("Connection error", {
+        description: "Unable to connect to the server. Please check your internet connection.",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    const data = await res.json().catch(() => ({}));
-    alert(data.error || "Login failed");
   }
 
   return (
@@ -72,19 +112,39 @@ export default function AdminLoginPage() {
                 placeholder="admin@invoicecraft.com" 
                 className="h-11 bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary/30" 
                 {...form.register("email")} 
+                disabled={isLoading}
               />
+              {form.formState.errors.email && (
+                <p className="text-sm text-red-500">{form.formState.errors.email.message}</p>
+              )}
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">Password</label>
               <Input 
                 type="password" 
+                placeholder="Enter your password"
                 className="h-11 bg-muted/30 border-muted-foreground/20 focus-visible:ring-primary/30" 
                 {...form.register("password")} 
+                disabled={isLoading}
               />
+              {form.formState.errors.password && (
+                <p className="text-sm text-red-500">{form.formState.errors.password.message}</p>
+              )}
             </div>
             
-            <Button className="w-full h-11 text-base font-medium shadow-primary/25 shadow-lg" type="submit">
-                Sign In
+            <Button 
+              className="w-full h-11 text-base font-medium shadow-primary/25 shadow-lg" 
+              type="submit"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing in...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
           </form>
 
