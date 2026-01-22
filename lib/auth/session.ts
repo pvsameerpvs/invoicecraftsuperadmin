@@ -28,13 +28,28 @@ export async function sealSession(payload: SessionData, maxAgeSeconds = 60 * 60 
     .setExpirationTime(now + maxAgeSeconds)
     .encrypt(getKey());
 
-  cookies().set(COOKIE_NAME, token, {
+  const isProduction = process.env.NODE_ENV === 'production';
+  const cookieOptions: any = {
     httpOnly: true,
     sameSite: "lax",
-    secure: true,
+    secure: isProduction, // Only use secure in production (HTTPS)
     path: "/",
     maxAge: maxAgeSeconds,
+  };
+
+  // In production, set domain for subdomain support
+  if (isProduction && env.ROOT_DOMAIN && !env.ROOT_DOMAIN.includes('localhost')) {
+    cookieOptions.domain = `.${env.ROOT_DOMAIN}`; // e.g., .invoicecraftjs.com
+  }
+
+  console.log('[SESSION] Setting cookie:', {
+    isProduction,
+    secure: cookieOptions.secure,
+    domain: cookieOptions.domain,
+    maxAge: maxAgeSeconds
   });
+
+  cookies().set(COOKIE_NAME, token, cookieOptions);
 }
 
 export async function clearSession() {
