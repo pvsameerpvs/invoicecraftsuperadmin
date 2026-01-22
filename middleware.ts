@@ -44,8 +44,13 @@ export async function middleware(req: NextRequest) {
        return NextResponse.next();
     }
 
+    // Redirect root to login page
+    if (url.pathname === "/") {
+      return NextResponse.redirect(new URL("/admin/login", req.url));
+    }
+
     if (!url.pathname.startsWith("/admin")) {
-      url.pathname = "/admin" + (url.pathname === "/" ? "" : url.pathname);
+      url.pathname = "/admin" + url.pathname;
     }
     return NextResponse.rewrite(url);
   }
